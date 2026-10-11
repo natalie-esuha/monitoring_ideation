@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}My safety plan{% endblock %}
+{% block content %}
+<h1 class="h4 mb-1">My safety plan</h1>
+<p class="text-muted small">Write this when you are feeling okay, so it is ready when you need it.</p>
+<div class="card shadow-sm"><div class="card-body p-4">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form.html" %}
+    <button class="btn btn-primary">Save plan</button>
+  </form>
+</div></div>
+{% endblock %}

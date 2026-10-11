@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Alert settings{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Alert settings</h1>
+<div class="card shadow-sm"><div class="card-body p-4">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form.html" %}
+    <button class="btn btn-primary">Save</button>
+  </form>
+</div></div>
+{% endblock %}

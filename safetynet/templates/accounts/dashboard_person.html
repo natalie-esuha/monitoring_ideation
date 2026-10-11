@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}My dashboard{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Hello, {{ user.first_name }}</h1>
+<div class="row g-3">
+  <div class="col-md-6"><a href="{% url 'safety_plan' %}" class="text-decoration-none text-body">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6">My safety plan</h2>
+      <p class="mb-0 small {% if has_plan %}text-success{% else %}text-muted{% endif %}">
+        {% if has_plan %}Started. Keep it up to date.{% else %}Not started yet. Begin here.{% endif %}</p>
+    </div></div></a></div>
+  <div class="col-md-6"><a href="{% url 'hope_box' %}" class="text-decoration-none text-body">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6">Hope box</h2>
+      <p class="mb-0 small text-muted">{{ hope_count }} item{{ hope_count|pluralize }} saved</p>
+    </div></div></a></div>
+  <div class="col-md-6"><a href="{% url 'support_circle' %}" class="text-decoration-none text-body">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6">Support circle</h2>
+      <p class="mb-0 small text-muted">{{ circle_count }} person{{ circle_count|pluralize:",people" }} linked</p>
+    </div></div></a></div>
+  <div class="col-md-6"><a href="{% url 'threshold' %}" class="text-decoration-none text-body">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6">Alert settings</h2>
+      <p class="mb-0 small text-muted">After {{ user.person_profile.threshold.inactivity_days }} days without activity</p>
+    </div></div></a></div>
+</div>
+{% endblock %}

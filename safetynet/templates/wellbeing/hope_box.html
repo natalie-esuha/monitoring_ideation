@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Hope box{% endblock %}
+{% block content %}
+<h1 class="h4 mb-1">Hope box</h1>
+<p class="text-muted small">Photos, messages and reasons that remind you life is worth it.</p>
+
+<div class="card shadow-sm mb-4"><div class="card-body p-4">
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% include "partials/form.html" %}
+    <button class="btn btn-primary">Add to hope box</button>
+  </form>
+</div></div>
+
+<div class="row g-3">
+  {% for item in items %}
+    <div class="col-sm-6"><div class="card h-100">
+      {% if item.is_image %}<img src="{{ item.file_url.url }}" class="hope-img" alt="{{ item.title }}">{% endif %}
+      <div class="card-body">
+        <span class="badge text-bg-light border">{{ item.item_type }}</span>
+        <p class="mb-1 mt-2">{{ item.title }}</p>
+        {% if item.file_url and not item.is_image %}
+          <a href="{{ item.file_url.url }}" target="_blank" class="small">Open file</a>
+        {% endif %}
+        <div class="small text-muted">{{ item.date_added|date:"d M Y" }}</div>
+      </div>
+      <div class="card-footer bg-white border-0 pt-0">
+        <form method="post" action="{% url 'hope_box_delete' item.pk %}"
+              onsubmit="return confirm('Remove this item?');">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-outline-secondary">Remove</button>
+        </form>
+      </div>
+    </div></div>
+  {% empty %}
+    <p class="text-muted small">Your hope box is empty. Add your first item above.</p>
+  {% endfor %}
+</div>
+{% endblock %}
