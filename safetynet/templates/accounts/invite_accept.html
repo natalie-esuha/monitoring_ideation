@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Accept invitation{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h1 class="h4 mb-3">Support invitation</h1>
+    <p>{{ inviter.first_name }} {{ inviter.last_name }} has invited you to be their support person ({{ invitation.relationship_type }}).</p>
+    <p class="text-muted small">If you accept, you will receive a text message if they have not checked in with the app for longer than their chosen number of days.</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-primary w-100">Accept</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

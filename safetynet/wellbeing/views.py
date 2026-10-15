@@ -4,10 +4,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from accounts.models import Role, SupportLink
-from .forms import SafetyPlanForm, HopeBoxForm, ThresholdForm, SupportLinkForm
+from accounts.forms import SupportInvitationForm
+from accounts.models import Role, SupportLink, SupportInvitation
+from .forms import SafetyPlanForm, HopeBoxForm, ThresholdForm
 from .models import SafetyPlan, HopeBoxItem
 
 
@@ -61,13 +64,49 @@ def hope_box_delete(request, pk):
 @person_only
 def support_circle(request):
     person = request.user.person_profile
-    form = SupportLinkForm(request.POST or None, person=person)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Support person added to your circle.")
+
+    # Cancel a pending invitation
+    if request.method == "POST" and "cancel_invitation" in request.POST:
+        invitation = get_object_or_404(
+            SupportInvitation,
+            pk=request.POST["cancel_invitation"],
+            person=person,
+            status=SupportInvitation.PENDING,
+        )
+        invitation.status = SupportInvitation.CANCELLED
+        invitation.save()
+        messages.success(request, "Invitation cancelled.")
         return redirect("support_circle")
+
+    form = SupportInvitationForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        email = form.cleaned_data["invitee_email"]
+        now = timezone.now()
+        if email == request.user.email.lower():
+            form.add_error("invitee_email", "You cannot invite yourself.")
+        elif SupportLink.objects.filter(person=person, designated__user__email__iexact=email).exists():
+            form.add_error("invitee_email", "This person is already in your circle.")
+        elif SupportInvitation.objects.filter(
+            person=person, invitee_email=email,
+            status=SupportInvitation.PENDING, expires_at__gt=now,
+        ).exists():
+            form.add_error("invitee_email", "There is already a pending invitation for this email.")
+        else:
+            invitation = form.save(commit=False)
+            invitation.person = person
+            invitation.save()
+            messages.success(request, "Invitation created. Copy the link below and send it to them.")
+            return redirect("support_circle")
+
     links = person.support_links.select_related("designated__user")
-    return render(request, "wellbeing/support_circle.html", {"form": form, "links": links})
+    pending = []
+    for inv in person.invitations.filter(
+        status=SupportInvitation.PENDING, expires_at__gt=timezone.now()
+    ).order_by("-created_at"):
+        inv.url = request.build_absolute_uri(reverse("invite_accept", args=[inv.token]))
+        pending.append(inv)
+    return render(request, "wellbeing/support_circle.html",
+                  {"form": form, "links": links, "pending": pending})
 
 
 @person_only

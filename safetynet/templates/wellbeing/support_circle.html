@@ -2,16 +2,37 @@
 {% block title %}Support circle{% endblock %}
 {% block content %}
 <h1 class="h4 mb-1">Support circle</h1>
-<p class="text-muted small">People who will be alerted if you go quiet. They need a SafetyNet account registered as a support person.</p>
+<p class="text-muted small">People who will be alerted if you go quiet. Invite each person, send them the link, and they join once they accept.</p>
 
 <div class="card shadow-sm mb-4"><div class="card-body p-4">
   <form method="post" novalidate>
     {% csrf_token %}
     {% include "partials/form.html" %}
-    <button class="btn btn-primary">Add to my circle</button>
+    <button class="btn btn-primary">Create invitation</button>
   </form>
 </div></div>
 
+{% if pending %}
+  <h2 class="h6 mt-4">Pending invitations</h2>
+  {% for inv in pending %}
+    <div class="card mb-2"><div class="card-body">
+      <div class="fw-semibold">{{ inv.invitee_name }} <span class="badge text-bg-warning">Pending</span></div>
+      <div class="small text-muted mb-2">{{ inv.invitee_email }} | {{ inv.relationship_type }} | expires {{ inv.expires_at|date:"d M Y" }}</div>
+      <div class="input-group input-group-sm mb-2">
+        <input type="text" class="form-control" id="link{{ inv.pk }}" value="{{ inv.url }}" readonly>
+        <button class="btn btn-outline-secondary" type="button"
+                onclick="navigator.clipboard.writeText(document.getElementById('link{{ inv.pk }}').value); this.textContent='Copied';">Copy</button>
+      </div>
+      <form method="post" onsubmit="return confirm('Cancel this invitation?');">
+        {% csrf_token %}
+        <input type="hidden" name="cancel_invitation" value="{{ inv.pk }}">
+        <button class="btn btn-sm btn-outline-secondary">Cancel invitation</button>
+      </form>
+    </div></div>
+  {% endfor %}
+{% endif %}
+
+<h2 class="h6 mt-4">In your circle</h2>
 {% for link in links %}
   <div class="card mb-2"><div class="card-body d-flex justify-content-between align-items-center">
     <div>

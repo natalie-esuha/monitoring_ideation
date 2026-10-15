@@ -3,7 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.validators import RegexValidator
 from django.db import transaction
 
-from .models import User, Role, PersonAtRisk, DesignatedPerson
+from .models import User, Role, PersonAtRisk, DesignatedPerson, SupportInvitation
 from wellbeing.models import AlertThreshold
 
 phone_validator = RegexValidator(
@@ -12,12 +12,10 @@ phone_validator = RegexValidator(
 
 
 class RegisterForm(forms.ModelForm):
-    ROLE_CHOICES = [
-        (Role.PERSON_AT_RISK, "I want to track my own wellbeing"),
-        (Role.DESIGNATED_PERSON, "I want to support someone"),
-    ]
+    # Public registration always creates a Person at Risk.
+    ROLE = Role.PERSON_AT_RISK
+
     phone_no = forms.CharField(max_length=20, validators=[phone_validator])
-    role_choice = forms.ChoiceField(choices=ROLE_CHOICES, label="I am registering as")
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Confirm password", widget=forms.PasswordInput)
 
@@ -42,16 +40,41 @@ class RegisterForm(forms.ModelForm):
     @transaction.atomic
     def save(self, commit=True):
         user = super().save(commit=False)
-        role_name = self.cleaned_data["role_choice"]
-        user.role, _ = Role.objects.get_or_create(role_name=role_name)
+        user.role, _ = Role.objects.get_or_create(role_name=self.ROLE)
         user.set_password(self.cleaned_data["password1"])
         user.save()
-        if role_name == Role.PERSON_AT_RISK:
+        if self.ROLE == Role.PERSON_AT_RISK:
             person = PersonAtRisk.objects.create(user=user)
             AlertThreshold.objects.create(person=person, inactivity_days=3)
         else:
             DesignatedPerson.objects.create(user=user)
         return user
+
+
+class InviteRegisterForm(RegisterForm):
+    # Used only on the invitation page. Role is assigned automatically.
+    ROLE = Role.DESIGNATED_PERSON
+
+    def __init__(self, *args, invitation=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.invitation = invitation
+        if invitation:
+            self.fields["email"].initial = invitation.invitee_email
+            self.fields["email"].disabled = True
+
+
+class SupportInvitationForm(forms.ModelForm):
+    class Meta:
+        model = SupportInvitation
+        fields = ["invitee_name", "invitee_email", "relationship_type"]
+        labels = {
+            "invitee_name": "Their name",
+            "invitee_email": "Their email",
+            "relationship_type": "Relationship (for example friend, sister, therapist)",
+        }
+
+    def clean_invitee_email(self):
+        return self.cleaned_data["invitee_email"].strip().lower()
 
 
 class EmailLoginForm(AuthenticationForm):

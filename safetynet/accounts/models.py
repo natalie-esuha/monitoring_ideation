@@ -1,5 +1,9 @@
+import secrets
+from datetime import timedelta
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.utils import timezone
 
 
 class Role(models.Model):
@@ -80,3 +84,34 @@ class SupportLink(models.Model):
 
     class Meta:
         unique_together = ("person", "designated")
+
+
+class SupportInvitation(models.Model):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    CANCELLED = "cancelled"
+    STATUSES = [(PENDING, "Pending"), (ACCEPTED, "Accepted"), (CANCELLED, "Cancelled")]
+
+    person = models.ForeignKey(PersonAtRisk, on_delete=models.CASCADE, related_name="invitations")
+    invitee_name = models.CharField(max_length=100)
+    invitee_email = models.EmailField(max_length=100)
+    relationship_type = models.CharField(max_length=50)
+    token = models.CharField(max_length=64, unique=True, editable=False)
+    status = models.CharField(max_length=10, choices=STATUSES, default=PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = secrets.token_urlsafe(32)
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(days=7)
+        self.invitee_email = self.invitee_email.strip().lower()
+        super().save(*args, **kwargs)
+
+    @property
+    def is_usable(self):
+        return self.status == self.PENDING and self.expires_at > timezone.now()
+
+    def __str__(self):
+        return f"{self.person} invited {self.invitee_email} ({self.status})"

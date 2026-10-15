@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Invitation{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <h1 class="h4 mb-3">Invitation not available</h1>
+    <p>{{ reason }}</p>
+    <a class="btn btn-outline-secondary" href="{% url 'dashboard' %}">Go to dashboard</a>
+  </div>
+</div>
+{% endblock %}
