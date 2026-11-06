@@ -1,33 +1,70 @@
 {% extends "base.html" %}
 {% block title %}My dashboard{% endblock %}
 {% block content %}
-<h1 class="h4 mb-3">Hello, {{ user.first_name }}</h1>
+<div class="hero p-4 p-md-5 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+  <div>
+    <h1 class="h3 mb-1">Hello, {{ user.first_name }}</h1>
+    <p class="mb-0 opacity-75">Take a moment for yourself today.</p>
+  </div>
+  <a href="{% url 'helplines' %}" class="btn btn-light"><i class="bi bi-telephone-fill me-1"></i>Get help now</a>
+</div>
+
 <div class="row g-3">
-  <div class="col-md-6"><a href="{% url 'safety_plan' %}" class="text-decoration-none text-body">
-    <div class="card h-100"><div class="card-body">
-      <h2 class="h6">My safety plan</h2>
-      <p class="mb-0 small {% if has_plan %}text-success{% else %}text-muted{% endif %}">
-        {% if has_plan %}Started. Keep it up to date.{% else %}Not started yet. Begin here.{% endif %}</p>
-    </div></div></a></div>
-  <div class="col-md-6"><a href="{% url 'hope_box' %}" class="text-decoration-none text-body">
-    <div class="card h-100"><div class="card-body">
-      <h2 class="h6">Hope box</h2>
-      <p class="mb-0 small text-muted">{{ hope_count }} item{{ hope_count|pluralize }} saved</p>
-    </div></div></a></div>
-  <div class="col-md-6"><a href="{% url 'support_circle' %}" class="text-decoration-none text-body">
-    <div class="card h-100"><div class="card-body">
-      <h2 class="h6">Support circle</h2>
-      <p class="mb-0 small text-muted">{{ circle_count }} {{ circle_count|pluralize:"person,people" }} linked</p>
-    </div></div></a></div>
-  <div class="col-md-6"><a href="{% url 'events' %}" class="text-decoration-none text-body">
-    <div class="card h-100"><div class="card-body">
-      <h2 class="h6">Events</h2>
-      <p class="mb-0 small text-muted">{{ event_count }} upcoming</p>
-    </div></div></a></div>
-  <div class="col-md-6"><a href="{% url 'threshold' %}" class="text-decoration-none text-body">
-    <div class="card h-100"><div class="card-body">
-      <h2 class="h6">Alert settings</h2>
-      <p class="mb-0 small text-muted">After {{ user.person_profile.threshold.inactivity_days }} days without activity</p>
-    </div></div></a></div>
+  <div class="col-md-6">
+    <a href="{% url 'safety_plan' %}" class="text-decoration-none text-body">
+      <div class="card tile h-100"><div class="card-body d-flex gap-3 align-items-center">
+        <div class="icon-circle ic-purple"><i class="bi bi-clipboard2-heart"></i></div>
+        <div>
+          <h2 class="h6 mb-1">My safety plan</h2>
+          <p class="mb-0 small {% if has_plan %}text-success{% else %}text-muted{% endif %}">
+            {% if has_plan %}Started. Keep it up to date.{% else %}Not started yet. Begin here.{% endif %}</p>
+        </div>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-md-6">
+    <a href="{% url 'hope_box' %}" class="text-decoration-none text-body">
+      <div class="card tile h-100"><div class="card-body d-flex gap-3 align-items-center">
+        <div class="icon-circle ic-pink"><i class="bi bi-box2-heart"></i></div>
+        <div>
+          <h2 class="h6 mb-1">Hope box</h2>
+          <p class="mb-0 small text-muted">{{ hope_count }} item{{ hope_count|pluralize }} saved</p>
+        </div>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-md-6">
+    <a href="{% url 'support_circle' %}" class="text-decoration-none text-body">
+      <div class="card tile h-100"><div class="card-body d-flex gap-3 align-items-center">
+        <div class="icon-circle ic-teal"><i class="bi bi-people-fill"></i></div>
+        <div>
+          <h2 class="h6 mb-1">Support circle</h2>
+          <p class="mb-0 small text-muted">{{ circle_count }} {{ circle_count|pluralize:"person,people" }} linked</p>
+        </div>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-md-6">
+    <a href="{% url 'events' %}" class="text-decoration-none text-body">
+      <div class="card tile h-100"><div class="card-body d-flex gap-3 align-items-center">
+        <div class="icon-circle ic-orange"><i class="bi bi-calendar-event"></i></div>
+        <div>
+          <h2 class="h6 mb-1">Events</h2>
+          <p class="mb-0 small text-muted">{{ event_count }} upcoming</p>
+        </div>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-12">
+    <a href="{% url 'threshold' %}" class="text-decoration-none text-body">
+      <div class="card tile h-100"><div class="card-body d-flex gap-3 align-items-center">
+        <div class="icon-circle ic-blue"><i class="bi bi-bell-fill"></i></div>
+        <div>
+          <h2 class="h6 mb-1">Alert settings</h2>
+          <p class="mb-0 small text-muted">After {{ user.person_profile.threshold.inactivity_days }} days without activity</p>
+        </div>
+      </div></div>
+    </a>
+  </div>
 </div>
 {% endblock %}
