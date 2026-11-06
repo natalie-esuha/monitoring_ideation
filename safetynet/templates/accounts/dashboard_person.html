@@ -17,7 +17,12 @@
   <div class="col-md-6"><a href="{% url 'support_circle' %}" class="text-decoration-none text-body">
     <div class="card h-100"><div class="card-body">
       <h2 class="h6">Support circle</h2>
-      <p class="mb-0 small text-muted">{{ circle_count }} person{{ circle_count|pluralize:",people" }} linked</p>
+      <p class="mb-0 small text-muted">{{ circle_count }} {{ circle_count|pluralize:"person,people" }} linked</p>
+    </div></div></a></div>
+  <div class="col-md-6"><a href="{% url 'events' %}" class="text-decoration-none text-body">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6">Events</h2>
+      <p class="mb-0 small text-muted">{{ event_count }} upcoming</p>
     </div></div></a></div>
   <div class="col-md-6"><a href="{% url 'threshold' %}" class="text-decoration-none text-body">
     <div class="card h-100"><div class="card-body">

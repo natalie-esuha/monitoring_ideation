@@ -2,7 +2,7 @@ import os
 from django import forms
 
 from accounts.models import User, Role, SupportLink
-from .models import SafetyPlan, HopeBoxItem, AlertThreshold
+from .models import SafetyPlan, HopeBoxItem, AlertThreshold, Event
 
 
 class BootstrapMixin:
@@ -98,3 +98,22 @@ class SupportLinkForm(BootstrapMixin, forms.Form):
             designated=self.designated,
             relationship_type=self.cleaned_data["relationship_type"],
         )
+
+
+class EventForm(BootstrapMixin, forms.ModelForm):
+    TYPES = [("Normal", "Normal"), ("Trigger", "Trigger")]
+
+    type = forms.ChoiceField(
+        choices=TYPES, label="Type",
+        help_text="Choose Trigger if this event is usually hard for you. "
+                  "Your support circle will be alerted when it is close.",
+    )
+
+    class Meta:
+        model = Event
+        fields = ["name", "type", "date", "description"]
+        labels = {"name": "Event name", "date": "Date", "description": "What happened or what is coming"}
+        widgets = {
+            "date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }

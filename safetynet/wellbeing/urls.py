@@ -8,5 +8,7 @@ urlpatterns = [
     path("support-circle/", views.support_circle, name="support_circle"),
     path("support-circle/<int:pk>/remove/", views.support_remove, name="support_remove"),
     path("alert-settings/", views.threshold_settings, name="threshold"),
+    path("events/", views.events, name="events"),
+    path("events/<int:pk>/delete/", views.event_delete, name="event_delete"),
     path("helplines/", views.helplines, name="helplines"),
 ]

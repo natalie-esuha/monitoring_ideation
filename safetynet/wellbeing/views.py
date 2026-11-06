@@ -10,8 +10,9 @@ from django.views.decorators.http import require_POST
 
 from accounts.forms import SupportInvitationForm
 from accounts.models import Role, SupportLink, SupportInvitation
-from .forms import SafetyPlanForm, HopeBoxForm, ThresholdForm
-from .models import SafetyPlan, HopeBoxItem
+from .alerts import run_alert_check
+from .forms import SafetyPlanForm, HopeBoxForm, ThresholdForm, EventForm
+from .models import SafetyPlan, HopeBoxItem, Event
 
 
 def person_only(view):
@@ -127,6 +128,33 @@ def threshold_settings(request):
         messages.success(request, "Alert setting updated.")
         return redirect("threshold")
     return render(request, "wellbeing/threshold.html", {"form": form})
+
+
+@person_only
+def events(request):
+    form = EventForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        event = form.save(commit=False)
+        event.user = request.user
+        event.save()
+        if event.type == Event.TRIGGER:
+            run_alert_check()
+        messages.success(request, "Event added.")
+        return redirect("events")
+    today = timezone.localdate()
+    upcoming = request.user.events.filter(date__gte=today).order_by("date")
+    past = request.user.events.filter(date__lt=today).order_by("-date")[:10]
+    return render(request, "wellbeing/events.html",
+                  {"form": form, "upcoming": upcoming, "past": past})
+
+
+@person_only
+@require_POST
+def event_delete(request, pk):
+    event = get_object_or_404(Event, pk=pk, user=request.user)
+    event.delete()
+    messages.success(request, "Event removed.")
+    return redirect("events")
 
 
 def helplines(request):

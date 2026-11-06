@@ -35,7 +35,7 @@ def _africastalking(to, body):
         },
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=20) as response:
+    with urllib.request.urlopen(request, timeout=60) as response:
         data = json.loads(response.read().decode())
     recipients = data.get("SMSMessageData", {}).get("Recipients", [])
     if recipients and all(r.get("statusCode") in (100, 101, 102) for r in recipients):
@@ -59,7 +59,6 @@ def is_configured(name):
     if name == "africastalking":
         return all([settings.AT_USERNAME, settings.AT_API_KEY])
     return False
-
 
 def send_sms(to, body):
     """Returns 'sent', 'simulated' or 'failed'. Never raises, so one bad send cannot stop the run."""

@@ -1,7 +1,11 @@
 venv/
-pycache/
+__pycache__/
 *.pyc
 .env
 safetynet/media/
 db.sqlite3
 .vscode/
+project_dump.txt
+projectdump.txt
+check_log.txt
+makedump.py

@@ -2,8 +2,11 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from .models import AlertThreshold, Alert
+from .models import AlertThreshold, Alert, Event
 from .sms import send_sms
+
+# Trigger events alert the support circle when the event is today or within this many days.
+EVENT_ALERT_DAYS_BEFORE = 1
 
 
 def normalize_phone(raw):
@@ -15,15 +18,7 @@ def normalize_phone(raw):
     return "+" + phone
 
 
-def run_alert_check(now=None, dry_run=False):
-    """Alert support people of anyone inactive past their threshold.
-
-    One alert per support person per inactivity period: once an alert has been recorded
-    after the person's last activity, no more are sent until they return and go quiet again.
-    Failed deliveries are retried on the next run. The alert record is always saved, so it
-    shows in the app and the database even when the SMS fails.
-    """
-    now = now or timezone.now()
+def _check_inactivity(now, dry_run):
     results = []
     thresholds = AlertThreshold.objects.filter(last_login__isnull=False).select_related("person__user")
 
@@ -37,6 +32,7 @@ def run_alert_check(now=None, dry_run=False):
             already_alerted = Alert.objects.filter(
                 threshold=threshold,
                 designated=link.designated,
+                event__isnull=True,
                 date_sent__gt=threshold.last_login,
             ).exclude(delivery_status="failed").exists()
             if already_alerted:
@@ -54,5 +50,50 @@ def run_alert_check(now=None, dry_run=False):
             status = send_sms(normalize_phone(supporter.phone_no), body)
             Alert.objects.create(threshold=threshold, designated=link.designated, delivery_status=status)
             results.append((person_user, supporter, status))
-
     return results
+
+
+def _check_trigger_events(now, dry_run):
+    results = []
+    today = timezone.localtime(now).date()
+    events = Event.objects.filter(
+        type=Event.TRIGGER,
+        date__gte=today,
+        date__lte=today + timedelta(days=EVENT_ALERT_DAYS_BEFORE),
+    ).select_related("user")
+
+    for event in events:
+        person = getattr(event.user, "person_profile", None)
+        threshold = getattr(person, "threshold", None) if person else None
+        if not threshold:
+            continue
+
+        for link in person.support_links.select_related("designated__user"):
+            already_alerted = Alert.objects.filter(
+                event=event, designated=link.designated
+            ).exclude(delivery_status="failed").exists()
+            if already_alerted:
+                continue
+
+            supporter = link.designated.user
+            if dry_run:
+                results.append((event.user, supporter, "dry-run (event)"))
+                continue
+
+            body = (
+                f"SafetyNet: {event.user.first_name} has a hard day coming up on "
+                f"{event.date:%d %b}. Please reach out to them when you can."
+            )
+            status = send_sms(normalize_phone(supporter.phone_no), body)
+            Alert.objects.create(threshold=threshold, designated=link.designated,
+                                 event=event, delivery_status=status)
+            results.append((event.user, supporter, f"{status} (event)"))
+    return results
+
+
+def run_alert_check(now=None, dry_run=False):
+    """Inactivity alerts and trigger event alerts. One alert per support person per
+    inactivity period, and one per support person per trigger event. Failed deliveries
+    are retried on the next run. The alert record is always saved."""
+    now = now or timezone.now()
+    return _check_inactivity(now, dry_run) + _check_trigger_events(now, dry_run)

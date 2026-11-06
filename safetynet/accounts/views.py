@@ -76,7 +76,8 @@ def dashboard(request):
     user = request.user
     if user.role_name == Role.DESIGNATED_PERSON:
         now = timezone.now()
-        links = user.designated_profile.supported.select_related("person__user", "person__threshold")
+        profile = user.designated_profile
+        links = profile.supported.select_related("person__user", "person__threshold")
         rows = []
         for link in links:
             threshold = getattr(link.person, "threshold", None)
@@ -90,13 +91,18 @@ def dashboard(request):
                 "limit": limit,
                 "overdue": days is not None and limit is not None and days >= limit,
             })
-        return render(request, "accounts/dashboard_designated.html", {"rows": rows})
+        alerts = profile.alerts.select_related(
+            "threshold__person__user", "event"
+        ).order_by("-date_sent")[:20]
+        return render(request, "accounts/dashboard_designated.html",
+                      {"rows": rows, "alerts": alerts})
     if user.role_name == Role.PERSON_AT_RISK:
         person = user.person_profile
         context = {
             "circle_count": person.support_links.count(),
             "hope_count": person.hope_items.count(),
             "has_plan": hasattr(person, "safety_plan"),
+            "event_count": user.events.filter(date__gte=timezone.localdate()).count(),
         }
         return render(request, "accounts/dashboard_person.html", context)
     return redirect("admin:index")

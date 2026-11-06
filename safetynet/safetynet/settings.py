@@ -82,9 +82,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "simulate")  # simulate, twilio or africastalking
 
-TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
-TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
-TWILIO_FROM_NUMBER = os.environ.get("TWILIO_FROM_NUMBER", "")
 
 AT_USERNAME = os.environ.get("AT_USERNAME", "")
 AT_API_KEY = os.environ.get("AT_API_KEY", "")

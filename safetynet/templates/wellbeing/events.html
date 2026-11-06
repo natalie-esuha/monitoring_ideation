@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Events{% endblock %}
+{% block content %}
+<h1 class="h4 mb-1">Events</h1>
+<p class="text-muted small">Things that have happened or are coming up in your life. Mark an event as Trigger if it is usually hard for you, and your support circle will be alerted when it is close.</p>
+
+<div class="card shadow-sm mb-4"><div class="card-body p-4">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form.html" %}
+    <button class="btn btn-primary">Add event</button>
+  </form>
+</div></div>
+
+<h2 class="h6">Upcoming</h2>
+{% for e in upcoming %}
+  <div class="card mb-2"><div class="card-body d-flex justify-content-between align-items-center">
+    <div>
+      <div class="fw-semibold">{{ e.name }}
+        {% if e.type == "Trigger" %}<span class="badge text-bg-warning">Trigger</span>{% else %}<span class="badge text-bg-light border">Normal</span>{% endif %}
+      </div>
+      <div class="small text-muted">{{ e.date|date:"D, d M Y" }}</div>
+      {% if e.description %}<div class="small mt-1">{{ e.description }}</div>{% endif %}
+    </div>
+    <form method="post" action="{% url 'event_delete' e.pk %}"
+          onsubmit="return confirm('Remove this event?');">
+      {% csrf_token %}
+      <button class="btn btn-sm btn-outline-secondary">Remove</button>
+    </form>
+  </div></div>
+{% empty %}
+  <p class="text-muted small">No upcoming events.</p>
+{% endfor %}
+
+{% if past %}
+  <h2 class="h6 mt-4">Past</h2>
+  {% for e in past %}
+    <div class="card mb-2"><div class="card-body d-flex justify-content-between align-items-center">
+      <div>
+        <div class="fw-semibold">{{ e.name }}
+          {% if e.type == "Trigger" %}<span class="badge text-bg-warning">Trigger</span>{% else %}<span class="badge text-bg-light border">Normal</span>{% endif %}
+        </div>
+        <div class="small text-muted">{{ e.date|date:"d M Y" }}</div>
+        {% if e.description %}<div class="small mt-1">{{ e.description }}</div>{% endif %}
+      </div>
+      <form method="post" action="{% url 'event_delete' e.pk %}"
+            onsubmit="return confirm('Remove this event?');">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-secondary">Remove</button>
+      </form>
+    </div></div>
+  {% endfor %}
+{% endif %}
+{% endblock %}

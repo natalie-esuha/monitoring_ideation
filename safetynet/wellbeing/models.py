@@ -3,6 +3,9 @@ from accounts.models import PersonAtRisk, DesignatedPerson, User
 
 
 class Event(models.Model):
+    NORMAL = "Normal"
+    TRIGGER = "Trigger"
+
     id_event = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=30)
@@ -46,5 +49,6 @@ class Alert(models.Model):
     alert_id = models.AutoField(primary_key=True)
     threshold = models.ForeignKey(AlertThreshold, on_delete=models.CASCADE, related_name="alerts")
     designated = models.ForeignKey(DesignatedPerson, on_delete=models.CASCADE, related_name="alerts")
+    event = models.ForeignKey(Event, null=True, blank=True, on_delete=models.CASCADE, related_name="alerts")
     date_sent = models.DateTimeField(auto_now_add=True)
     delivery_status = models.CharField(max_length=20, default="pending")
