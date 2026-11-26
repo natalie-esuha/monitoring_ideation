@@ -1,11 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Support circle{% endblock %}
 {% block content %}
-<h1 class="h4 mb-1">Support circle</h1>
-<p class="text-muted small">People who will be alerted if you go quiet. Invite each person, send them the link, and they join once they accept.</p>
+<div class="d-flex align-items-center gap-3 mb-4">
+  <div class="icon-circle ic-teal"><i class="bi bi-people-fill"></i></div>
+  <div>
+    <h1 class="h3 mb-0">Support circle</h1>
+    <p class="text-muted mb-0">People who will be alerted if you go quiet or ask for help. Invite each person, send them the link, and they join once they accept.</p>
+  </div>
+</div>
 
-<div class="card shadow-sm mb-4"><div class="card-body p-4">
-  <form method="post" novalidate>
+<div class="card form-card"><div class="card-body p-4">
+  <h2 class="h6 mb-3"><i class="bi bi-person-plus me-1"></i>Invite someone</h2>
+  <form method="post" novalidate autocomplete="off">
     {% csrf_token %}
     {% include "partials/form.html" %}
     <button class="btn btn-primary">Create invitation</button>

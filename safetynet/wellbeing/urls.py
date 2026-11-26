@@ -10,5 +10,8 @@ urlpatterns = [
     path("alert-settings/", views.threshold_settings, name="threshold"),
     path("events/", views.events, name="events"),
     path("events/<int:pk>/delete/", views.event_delete, name="event_delete"),
+    path("check-in/", views.checkin, name="checkin"),
+    path("mood/", views.mood_history, name="mood"),
+    path("help-request/", views.help_request, name="help_request"),
     path("helplines/", views.helplines, name="helplines"),
 ]

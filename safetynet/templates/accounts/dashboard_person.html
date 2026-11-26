@@ -9,6 +9,68 @@
   <a href="{% url 'helplines' %}" class="btn btn-light"><i class="bi bi-telephone-fill me-1"></i>Get help now</a>
 </div>
 
+<div class="card mb-3"><div class="card-body p-4">
+  <form method="post" action="{% url 'checkin' %}">
+    {% csrf_token %}
+    <h2 class="h5 mb-1">
+      {% if checkin %}You checked in today: {{ checkin.label }}{% else %}How are you feeling today?{% endif %}
+    </h2>
+    <p class="small text-muted mb-3">
+      {% if checkin %}You can tap another face to update it.{% else %}Add a note if you like, then tap a face. It takes a few seconds.{% endif %}
+      {% if week_count %} You have checked in {{ week_count }} of the last 7 days.{% endif %}
+    </p>
+    <label class="form-label small" for="note">Optional note</label>
+    <input type="text" id="note" name="note" maxlength="255" class="form-control mb-3"
+           placeholder="Anything on your mind?" value="{{ checkin.note|default:'' }}" autocomplete="off">
+    <div class="mood-row">
+      {% for value, label, icon in faces %}
+        <button type="submit" name="mood" value="{{ value }}"
+                class="mood-btn mood-{{ value }}{% if checkin and checkin.mood == value %} selected{% endif %}"
+                aria-label="{{ label }}"><i class="bi {{ icon }}"></i>{{ label }}</button>
+      {% endfor %}
+    </div>
+  </form>
+</div></div>
+
+{% if checkin and checkin.mood <= 2 %}
+  <div class="card mb-3 border-start border-4 border-warning"><div class="card-body p-4">
+    <h2 class="h5 mb-1">Sounds like a hard day. You are not alone.</h2>
+    <p class="mb-3">Here are some things that can help right now.</p>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" href="{% url 'helplines' %}"><i class="bi bi-wind me-1"></i>Breathing exercise</a>
+      <a class="btn btn-outline-secondary" href="{% url 'safety_plan' %}"><i class="bi bi-clipboard2-heart me-1"></i>My safety plan</a>
+      <a class="btn btn-outline-secondary" href="{% url 'hope_box' %}"><i class="bi bi-box2-heart me-1"></i>My hope box</a>
+    </div>
+  </div></div>
+{% endif %}
+
+{% if hope_today %}
+  <div class="card mb-3 overflow-hidden"><div class="row g-0">
+    {% if hope_today.is_image %}
+      <div class="col-md-4"><img src="{{ hope_today.file_url.url }}" alt="{{ hope_today.title }}" style="width:100%;height:100%;min-height:160px;object-fit:cover;"></div>
+    {% endif %}
+    <div class="{% if hope_today.is_image %}col-md-8{% else %}col-12{% endif %}"><div class="card-body p-4">
+      <div class="small text-muted mb-1"><i class="bi bi-box2-heart me-1"></i>From your hope box today</div>
+      <p class="h5 mb-2">{{ hope_today.title }}</p>
+      {% if hope_today.file_url and not hope_today.is_image %}
+        <a href="{{ hope_today.file_url.url }}" target="_blank" class="small"><i class="bi bi-paperclip"></i> Open file</a>
+      {% endif %}
+    </div></div>
+  </div></div>
+{% endif %}
+
+<div class="card mb-4"><div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+  <div>
+    <h2 class="h6 mb-1">Need someone right now?</h2>
+    <p class="small text-muted mb-0">This sends a text to everyone in your support circle.</p>
+  </div>
+  <form method="post" action="{% url 'help_request' %}" class="m-0"
+        onsubmit="return confirm('Send a text to your support circle now?');">
+    {% csrf_token %}
+    <button class="btn btn-sos"><i class="bi bi-life-preserver me-1"></i>I need help now</button>
+  </form>
+</div></div>
+
 <div class="row g-3">
   <div class="col-md-6">
     <a href="{% url 'safety_plan' %}" class="text-decoration-none text-body">
@@ -55,7 +117,18 @@
       </div></div>
     </a>
   </div>
-  <div class="col-12">
+  <div class="col-md-6">
+    <a href="{% url 'mood' %}" class="text-decoration-none text-body">
+      <div class="card tile h-100"><div class="card-body d-flex gap-3 align-items-center">
+        <div class="icon-circle ic-purple"><i class="bi bi-emoji-smile"></i></div>
+        <div>
+          <h2 class="h6 mb-1">My mood</h2>
+          <p class="mb-0 small text-muted">See how you have been feeling</p>
+        </div>
+      </div></div>
+    </a>
+  </div>
+  <div class="col-md-6">
     <a href="{% url 'threshold' %}" class="text-decoration-none text-body">
       <div class="card tile h-100"><div class="card-body d-flex gap-3 align-items-center">
         <div class="icon-circle ic-blue"><i class="bi bi-bell-fill"></i></div>

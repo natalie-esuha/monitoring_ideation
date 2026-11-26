@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -8,6 +10,7 @@ from django.utils import timezone
 
 from .forms import RegisterForm, InviteRegisterForm
 from .models import Role, SupportInvitation, SupportLink, User
+from wellbeing.models import MoodCheckIn
 
 
 def register(request):
@@ -98,11 +101,20 @@ def dashboard(request):
                       {"rows": rows, "alerts": alerts})
     if user.role_name == Role.PERSON_AT_RISK:
         person = user.person_profile
+        today = timezone.localdate()
+        checkin = person.checkins.filter(date=today).first()
+        week_count = person.checkins.filter(date__gte=today - timedelta(days=6)).count()
+        hope_items = list(person.hope_items.order_by("item_id"))
+        hope_today = hope_items[today.toordinal() % len(hope_items)] if hope_items else None
         context = {
             "circle_count": person.support_links.count(),
-            "hope_count": person.hope_items.count(),
+            "hope_count": len(hope_items),
             "has_plan": hasattr(person, "safety_plan"),
-            "event_count": user.events.filter(date__gte=timezone.localdate()).count(),
+            "event_count": user.events.filter(date__gte=today).count(),
+            "checkin": checkin,
+            "week_count": week_count,
+            "hope_today": hope_today,
+            "faces": MoodCheckIn.FACES,
         }
         return render(request, "accounts/dashboard_person.html", context)
     return redirect("admin:index")
