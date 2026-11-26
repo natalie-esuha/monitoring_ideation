@@ -1,21 +1,112 @@
 {% extends "base.html" %}
 {% block title %}Get help now{% endblock %}
 {% block content %}
-<h1 class="h4 mb-1">You are not alone</h1>
-<p class="text-muted">If you are in immediate danger, call your local emergency number now.</p>
+<h1 class="h3 mb-1">You are not alone</h1>
+<p class="text-muted">If you are in immediate danger, call 999 or 112 now.</p>
+
+{% if user.is_authenticated and user.role_name == "Person at Risk" %}
+  <div class="card mb-3 border-start border-4 border-danger"><div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+      <h2 class="h6 mb-1">Tell my support circle</h2>
+      <p class="small text-muted mb-0">Sends a text to everyone in your circle asking them to reach you now.</p>
+    </div>
+    <form method="post" action="{% url 'help_request' %}" class="m-0"
+          onsubmit="return confirm('Send a text to your support circle now?');">
+      {% csrf_token %}
+      <button class="btn btn-sos"><i class="bi bi-life-preserver me-1"></i>I need help now</button>
+    </form>
+  </div></div>
+{% endif %}
 
 {% for line in lines %}
-  <div class="card mb-2"><div class="card-body d-flex justify-content-between align-items-center">
-    <div>
-      <div class="fw-semibold">{{ line.name }}</div>
-      <div class="small text-muted">{{ line.detail }}</div>
+  <div class="card mb-2"><div class="card-body d-flex justify-content-between align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="icon-circle ic-pink"><i class="bi bi-telephone-fill"></i></div>
+      <div>
+        <div class="fw-semibold">{{ line.name }}</div>
+        <div class="small text-muted">{{ line.detail }}</div>
+      </div>
     </div>
     <a class="btn btn-primary" href="tel:{{ line.phone }}">Call {{ line.phone }}</a>
   </div></div>
 {% endfor %}
 
-<div class="card mt-4"><div class="card-body">
-  <h2 class="h6">Grounding exercise: 5-4-3-2-1</h2>
-  <p class="small mb-0">Name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell and 1 you can taste. Breathe slowly between each one.</p>
-</div></div>
+<div class="row g-3 mt-2">
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body text-center p-4">
+      <h2 class="h5 mb-1"><i class="bi bi-wind me-1"></i>Breathing exercise</h2>
+      <p class="small text-muted">In for 4, hold for 4, out for 6. Follow the circle and the words.</p>
+      <div class="breath-stage">
+        <div class="breath-ring"></div>
+        <div class="breath-circle" id="bcircle"></div>
+        <div class="breath-count" id="bcount" aria-hidden="true"></div>
+      </div>
+      <p class="h5 mb-1" id="bphase" role="status" aria-live="polite">Ready when you are</p>
+      <p class="small text-muted mb-3" id="brounds">Rounds completed: 0</p>
+      <button type="button" class="btn btn-primary px-5" id="bbtn">Start</button>
+    </div></div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body p-4">
+      <h2 class="h5 mb-1"><i class="bi bi-eye me-1"></i>Grounding: 5-4-3-2-1</h2>
+      <p class="small text-muted">Go slowly. Breathe between each step.</p>
+      <ol class="list-unstyled mb-0">
+        <li class="plan-item"><strong>5</strong> things you can see</li>
+        <li class="plan-item"><strong>4</strong> things you can touch</li>
+        <li class="plan-item"><strong>3</strong> things you can hear</li>
+        <li class="plan-item"><strong>2</strong> things you can smell</li>
+        <li class="plan-item"><strong>1</strong> thing you can taste</li>
+      </ol>
+    </div></div>
+  </div>
+</div>
+
+<style>
+  .breath-stage { position: relative; width: 240px; height: 240px; margin: 1rem auto; display: flex; align-items: center; justify-content: center; }
+  .breath-ring { position: absolute; width: 230px; height: 230px; border-radius: 50%; border: 2px dashed var(--brand); opacity: .35; }
+  .breath-circle { width: 130px; height: 130px; border-radius: 50%; transition: transform 4s ease-in-out;
+    background: radial-gradient(circle at 35% 30%, #c4b5fd, var(--brand) 60%, var(--accent)); box-shadow: 0 0 50px rgba(108, 92, 231, .45); }
+  .breath-count { position: absolute; font-size: 2rem; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
+</style>
+<script>
+(function () {
+  var phases = [
+    { t: "Breathe in", s: 4, scale: 1.7 },
+    { t: "Hold", s: 4, scale: 1.7 },
+    { t: "Breathe out", s: 6, scale: 1 }
+  ];
+  var circle = document.getElementById("bcircle"), count = document.getElementById("bcount"),
+      phase = document.getElementById("bphase"), rounds = document.getElementById("brounds"),
+      btn = document.getElementById("bbtn");
+  var timer = null, i = 0, left = 0, done = 0;
+
+  function show() {
+    var p = phases[i % 3];
+    phase.textContent = p.t;
+    left = p.s;
+    count.textContent = left;
+    circle.style.transitionDuration = p.s + "s";
+    circle.style.transform = "scale(" + p.scale + ")";
+  }
+  function tick() {
+    left--;
+    if (left <= 0) {
+      i++;
+      if (i % 3 === 0) { done++; rounds.textContent = "Rounds completed: " + done; }
+      show();
+    } else { count.textContent = left; }
+  }
+  btn.addEventListener("click", function () {
+    if (timer) {
+      clearInterval(timer); timer = null;
+      circle.style.transform = "scale(1)"; count.textContent = "";
+      phase.textContent = "Well done. Press start to go again."; btn.textContent = "Start";
+      return;
+    }
+    i = 0; done = 0; rounds.textContent = "Rounds completed: 0";
+    show(); timer = setInterval(tick, 1000); btn.textContent = "Stop";
+  });
+})();
+</script>
 {% endblock %}

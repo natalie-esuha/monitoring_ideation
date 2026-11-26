@@ -38,6 +38,35 @@ class HopeBoxItem(models.Model):
         )
 
 
+class MoodCheckIn(models.Model):
+    FACES = [
+        (1, "Very low", "bi-emoji-frown-fill"),
+        (2, "Low", "bi-emoji-expressionless-fill"),
+        (3, "Okay", "bi-emoji-neutral-fill"),
+        (4, "Good", "bi-emoji-smile-fill"),
+        (5, "Great", "bi-emoji-laughing-fill"),
+    ]
+    MOODS = [(value, label) for value, label, _ in FACES]
+
+    checkin_id = models.AutoField(primary_key=True)
+    person = models.ForeignKey(PersonAtRisk, on_delete=models.CASCADE, related_name="checkins")
+    date = models.DateField()
+    mood = models.PositiveSmallIntegerField(choices=MOODS)
+    note = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("person", "date")
+
+    @property
+    def icon(self):
+        return {v: i for v, _, i in self.FACES}.get(self.mood, "bi-emoji-neutral-fill")
+
+    @property
+    def label(self):
+        return dict(self.MOODS).get(self.mood, "")
+
+
 class AlertThreshold(models.Model):
     threshold_id = models.AutoField(primary_key=True)
     person = models.OneToOneField(PersonAtRisk, on_delete=models.CASCADE, related_name="threshold")
@@ -46,9 +75,14 @@ class AlertThreshold(models.Model):
 
 
 class Alert(models.Model):
+    INACTIVITY = "Inactivity"
+    TRIGGER = "Trigger event"
+    HELP = "Help request"
+
     alert_id = models.AutoField(primary_key=True)
     threshold = models.ForeignKey(AlertThreshold, on_delete=models.CASCADE, related_name="alerts")
     designated = models.ForeignKey(DesignatedPerson, on_delete=models.CASCADE, related_name="alerts")
     event = models.ForeignKey(Event, null=True, blank=True, on_delete=models.CASCADE, related_name="alerts")
+    kind = models.CharField(max_length=20, default=INACTIVITY)
     date_sent = models.DateTimeField(auto_now_add=True)
     delivery_status = models.CharField(max_length=20, default="pending")

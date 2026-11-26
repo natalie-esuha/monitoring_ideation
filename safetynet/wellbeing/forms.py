@@ -29,6 +29,13 @@ class SafetyPlanForm(BootstrapMixin, forms.ModelForm):
         }
 
 
+class SafetyItemForm(BootstrapMixin, forms.Form):
+    SECTIONS = [("warning_signs", "A warning sign"), ("triggers", "A trigger"), ("coping_strategy", "A coping step")]
+    section = forms.ChoiceField(choices=SECTIONS, label="Add to")
+    text = forms.CharField(max_length=200, label="What would you like to add?",
+                           widget=forms.Textarea(attrs={"rows": 3}))
+
+
 class HopeBoxForm(BootstrapMixin, forms.ModelForm):
     TYPES = [("Photo", "Photo"), ("Note", "Note to myself"), ("Memory", "Memory"),
              ("Reason", "Reason to live"), ("Other", "Other")]

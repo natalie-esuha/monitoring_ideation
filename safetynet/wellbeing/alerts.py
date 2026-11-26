@@ -33,6 +33,7 @@ def _check_inactivity(now, dry_run):
                 threshold=threshold,
                 designated=link.designated,
                 event__isnull=True,
+                kind=Alert.INACTIVITY,
                 date_sent__gt=threshold.last_login,
             ).exclude(delivery_status="failed").exists()
             if already_alerted:
@@ -48,7 +49,8 @@ def _check_inactivity(now, dry_run):
                 f"Please reach out to them when you can."
             )
             status = send_sms(normalize_phone(supporter.phone_no), body)
-            Alert.objects.create(threshold=threshold, designated=link.designated, delivery_status=status)
+            Alert.objects.create(threshold=threshold, designated=link.designated,
+                                 kind=Alert.INACTIVITY, delivery_status=status)
             results.append((person_user, supporter, status))
     return results
 
@@ -86,7 +88,7 @@ def _check_trigger_events(now, dry_run):
             )
             status = send_sms(normalize_phone(supporter.phone_no), body)
             Alert.objects.create(threshold=threshold, designated=link.designated,
-                                 event=event, delivery_status=status)
+                                 event=event, kind=Alert.TRIGGER, delivery_status=status)
             results.append((event.user, supporter, f"{status} (event)"))
     return results
 
